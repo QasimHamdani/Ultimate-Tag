@@ -15,6 +15,7 @@ public class Obstacle {
     public boolean leftPressed;
     public boolean upPressed;
     public boolean downPressed;
+    public boolean isIntersecting;
 
     public Obstacle(int pXpos, int pYpos, int pDx, int pDy){
 

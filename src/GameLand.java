@@ -56,6 +56,10 @@ public class GameLand implements Runnable, KeyListener {
     public boolean startScreen = true;
     public boolean isPlaying;
     public boolean gameOver;
+    public long startTime;
+    public long currentTime;
+    public long elapsedTime;
+
 
     //Declare the objects used in the program below
 
@@ -76,6 +80,12 @@ public class GameLand implements Runnable, KeyListener {
     public Image GhostPic;
     public Image CloudPic;
     public Image BananaPic;
+    public Image EndPic;
+
+    public boolean PizzaIsIntersectingBananas;
+    public boolean BallIsIntersectingBananas;
+
+    public int count;
 
     // Main method definition: PSVM
     // This is the code that runs first and automatically
@@ -85,6 +95,7 @@ public class GameLand implements Runnable, KeyListener {
     }
 
     public Image backPic;
+    public Image StartPic;
     public boolean diverIsIntersectingDj;
     public boolean lightningIsIntersectingDiver;
     public boolean djIsIntersectingLightning;
@@ -100,24 +111,7 @@ public class GameLand implements Runnable, KeyListener {
         //create (construct) the objects needed for the game below
         //        //for each object that has a picture, load in images as well
         /** Step 3 Constryct a specific Hero**/
-        Ball = new Hero(400, 12, 6, 4);
-        Pizza = new Hero(222, 621, 6,  4);
-        BWTB = new Hero(623, 232, 6, 4);
-        Ghost = new Hero(555, 532, 6, 4);
-        Cloud = new Hero(400, 400, 0,0);
-        Cloud.width=100;
-        Cloud.height=100;
-        BWTB.width=150;
-        BWTB.height=150;
-        Ghost.width=100;
-        Ghost.height=100;
 
-        bananas = new Obstacle[15];
-        for(int i=0; i<bananas.length; i=i+1){
-            int randX = (int)(Math.random()*1000);
-            int randY = (int)(Math.random()*700);
-            bananas[i] = new Obstacle(randX, randY, 2, 3);
-        }
 
 
         /** Step 4 load in the image for your object**/
@@ -128,9 +122,31 @@ public class GameLand implements Runnable, KeyListener {
         CloudPic = Toolkit.getDefaultToolkit().getImage("cloud.png");
         backPic = Toolkit.getDefaultToolkit().getImage("back.jpeg");
         BananaPic =  Toolkit.getDefaultToolkit().getImage("banana.png");
+        StartPic =  Toolkit.getDefaultToolkit().getImage("Start.png");
+        EndPic = Toolkit.getDefaultToolkit().getImage("END.png");
 
 
     }// GameLand()
+    public void startLevel(){
+        Ball = new Hero(800, 12, 6, 4);
+        Pizza = new Hero(55, 621, 6, 4);
+        BWTB = new Hero(623, 232, 6, 4);
+        Ghost = new Hero(555, 532, 6, 4);
+        Cloud = new Hero(400, 400, 0, 0);
+        Cloud.width = 100;
+        Cloud.height = 100;
+        BWTB.width = 150;
+        BWTB.height = 150;
+        Ghost.width = 100;
+        Ghost.height = 100;
+
+        bananas = new Obstacle[15];
+        for (int i = 0; i < bananas.length; i = i + 1) {
+            int randX = (int) (Math.random() * 1000);
+            int randY = (int) (Math.random() * 700);
+            bananas[i] = new Obstacle(randX, randY, 2, 3);
+        }
+    }
 
 //*******************************************************************************
 //User Method Section
@@ -154,32 +170,48 @@ public class GameLand implements Runnable, KeyListener {
         Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
         g.clearRect(0, 0, WIDTH, HEIGHT);
        if(startScreen==true) {
-           g.drawString("press space bar to start", 400, 300);
+           g.drawImage(StartPic, 0, 0, WIDTH, HEIGHT, null);
+           g.drawString("press space bar to start" + "      ITS GO TIME", 400, 300);
+           startTime=System.currentTimeMillis();
        }
-           if (isPlaying == true) {
 
+
+        if (isPlaying == true) {
 
                //draw the image of your objects below:
                /**Step 5 draw the image of your object to the screen**/
                g.drawImage(backPic, 0, 0, WIDTH, HEIGHT, null);
+               if (Ball != null) {
+                   g.drawImage(BallPic, (int) Ball.xpos, (int) Ball.ypos, (int) Ball.width, (int) Ball.height, null);
+               }
+               if (Pizza != null) {
+                   g.drawImage(PizzaPic, (int) Pizza.xpos, (int) Pizza.ypos, (int) Pizza.width, (int) Pizza.height, null);
+               }
+               g.drawImage(BWTBPic, (int) BWTB.xpos, (int) BWTB.ypos, (int) BWTB.width, (int) BWTB.height, null);
+               g.drawImage(GhostPic, (int) Ghost.xpos, (int) Ghost.ypos, (int) Ghost.width, (int) Ghost.height, null);
+               g.drawImage(CloudPic, (int) Cloud.xpos, (int) Cloud.ypos, (int) Cloud.width, (int) Cloud.height, null);
 
-               g.drawImage(BallPic, Ball.xpos, Ball.ypos, Ball.width, Ball.height, null);
-               g.drawImage(PizzaPic, Pizza.xpos, Pizza.ypos, Pizza.width, Pizza.height, null);
-               g.drawImage(BWTBPic, BWTB.xpos, BWTB.ypos, BWTB.width, BWTB.height, null);
-               g.drawImage(GhostPic, Ghost.xpos, Ghost.ypos, Ghost.width, Ghost.height, null);
-               g.drawImage(CloudPic, Cloud.xpos, Cloud.ypos, Cloud.width, Cloud.height, null);
-
+               if (bananas!= null) {
                for (int i = 0; i < bananas.length; i = i + 1) {
                    g.drawImage(BananaPic, bananas[i].xpos, bananas[i].ypos, bananas[i].width, bananas[i].height, null);
-                   //g.drawImage(BananaPic[i], bananas[2].xpos, bananas[2].ypos, bananas[2].width, bananas[2].height, null);
-                   //g.drawImage(BananaPic[i], bananas[3].xpos, bananas[3].ypos, bananas[3].width, bananas[3].height, null);
-                   //g.drawImage(BananaPic[i], bananas[4].xpos, bananas[4].ypos, bananas[4].width, bananas[4].height, null);
-                   //g.drawImage(BananaPic[i], bananas[5].xpos, bananas[5].ypos, bananas[5].width, bananas[5].height, null);
                    //g.draw image once you find a bannan pic
                }
+               }
+
+
+
+
            }
        if (gameOver==true){
-           g.drawString("game over", 400, 300);
+           g.drawImage(EndPic, 0, 0, WIDTH, HEIGHT, null);
+           if( count <1) {
+               currentTime=System.currentTimeMillis();
+               elapsedTime=(int)((currentTime-startTime)*.001); // *.001 to convert to seconds
+               System.out.println(elapsedTime);
+               count++;
+           }
+
+
        }
         //dispose the images each time(this allows for the illusion of movement).
         g.dispose();
@@ -189,39 +221,72 @@ public class GameLand implements Runnable, KeyListener {
 
     public void moveThings() {
         //call the move() method code from your object class
-
-        BWTB.move();
-        Ball.move();
-        Ghost.move();
-        Pizza.move();
-        for(int i=0; i<bananas.length; i=i+1){
-            bananas[i].bouncingMove();
+        if (Ball != null) {
+            Ball.move();
         }
+        if (Pizza != null) {
+            Pizza.move();
+        }
+        if (bananas != null) {
+            for (int i = 0; i < bananas.length; i = i + 1) {
+                bananas[i].bouncingMove();
+            }
+            BWTB.move();
+            Ball.move();
+            Ghost.move();
+            Pizza.move();
+            for (int i = 0; i < bananas.length; i = i + 1) {
+                bananas[i].bouncingMove();
+            }
+        }
+
+
+
     }
 
     public void collisions() {
-        for (int h = 0; h < bananas.length; h = h + 1) {
-            if (bananas[h].rec.intersects(Ball.rec)) {
-                Ball.dx+=10;
-                Ball.dy+=10;
-                System.out.println("OUCH");
-                System.out.println("ball speed: "+ Ball.dx);
-            }
-        }
-            for (int l = 0; l < bananas.length; l = l + 1) {
-                if (bananas[l].rec.intersects(Pizza.rec)) {
-                    Pizza.dx = Pizza.dx - 2;
-                    Pizza.dy = Pizza.dy-2;
+        if (Ball != null && bananas != null) {
+            for (int h = 0; h < bananas.length; h = h + 1) {
+                if (bananas[h].rec.intersects(Ball.rec)) {
+                    Ball.dx += 10;
+                    Ball.dy += 10;
+                    //System.out.println("OUCH");
+                    //System.out.println("ball speed: " + Ball.dx);
                 }
             }
-
+        }
+        if (Pizza != null && bananas != null) {
+            for (int l = 0; l < bananas.length; l = l + 1) {
+                if (bananas[l].rec.intersects(Pizza.rec) && bananas[l].isIntersecting == false) {
+                    bananas[l].isIntersecting = true;
+                    //System.out.println("banana pizza");
+                    if (Pizza.pace > 1.5) {
+                        Pizza.pace = Pizza.pace - 0.5;
+                    }
+                }
+                if (!bananas[l].rec.intersects(Pizza.rec)) {
+                    bananas[l].isIntersecting = false;
+                }
+            }
+            for (int l = 0; l < bananas.length; l = l + 1) {
+                if (bananas[l].rec.intersects(Ball.rec) && bananas[l].isIntersecting == false) {
+                    bananas[l].isIntersecting = true;
+                    //System.out.println("banana ball");
+                    if (Ball.pace > 1.5) {
+                        Ball.pace = Ball.pace - 0.5;
+                    }
+                }
+                if (!bananas[l].rec.intersects(Ball.rec)) {
+                    bananas[l].isIntersecting = false;
+                }
                 if (Ball.rec.intersects(Pizza.rec)) {
                     gameOver = true;
-                    isPlaying=false;
+                    isPlaying = false;
                 }
-
+            }
 
         }
+    }
 
 
         //Pauses or sleeps the computer for the amount specified in milliseconds
@@ -274,7 +339,7 @@ public class GameLand implements Runnable, KeyListener {
         public void keyPressed (KeyEvent e){
             char key = e.getKeyChar();
             int keyCode = e.getKeyCode();
-            System.out.println("Key:" + key + ", KeyCode: " + keyCode);
+            //System.out.println("Key:" + key + ", KeyCode: " + keyCode);
             if (keyCode == 68) {//d=68
                 Ball.rightPressed = true;
             }
@@ -309,6 +374,7 @@ public class GameLand implements Runnable, KeyListener {
             if (keyCode == 32) {
                 startScreen = false;
                 isPlaying = true;
+                startLevel();
             }
             if (keyCode == 68) {//d=68
                 Ball.rightPressed = false;
@@ -333,6 +399,12 @@ public class GameLand implements Runnable, KeyListener {
             }
             if (keyCode == 40) {//down arrow =40
                 Pizza.downPressed = false;
+            }
+            if(keyCode==32){
+                if(startScreen==true){
+                    startScreen=false;
+                    isPlaying=true;
+                }
             }
         }
     }
