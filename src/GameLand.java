@@ -120,7 +120,7 @@ public class GameLand implements Runnable, KeyListener {
         BWTBPic = Toolkit.getDefaultToolkit().getImage("BWTB.png");
         GhostPic = Toolkit.getDefaultToolkit().getImage("Ghost.png");
         CloudPic = Toolkit.getDefaultToolkit().getImage("cloud.png");
-        backPic = Toolkit.getDefaultToolkit().getImage("back.jpeg");
+        backPic = Toolkit.getDefaultToolkit().getImage("images");
         BananaPic =  Toolkit.getDefaultToolkit().getImage("banana.png");
         StartPic =  Toolkit.getDefaultToolkit().getImage("Start.png");
         EndPic = Toolkit.getDefaultToolkit().getImage("END.png");
