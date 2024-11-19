@@ -32,12 +32,18 @@ public class ReadJson {
 
         // To print in JSON format.
         System.out.print(file.get("Tution Fees"));
-        pull();
 
+ReadJson readJson = new ReadJson();
     }
+public ReadJson (){
+    try {
+        pull();
+    } catch (ParseException e) {
+        throw new RuntimeException(e);
+    }
+}
 
-
-    public static void pull() throws ParseException {
+    public  void pull() throws ParseException {
         String output = "abc";
         String totlaJson="";
         try {

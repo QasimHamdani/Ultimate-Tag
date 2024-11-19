@@ -18,19 +18,39 @@
 
 //Graphics Libraries
 
-import apple.laf.JRSUIUtils;
-
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
 import java.awt.*;
-import java.rmi.registry.RegistryHandler;
-import java.sql.SQLOutput;
-import java.util.WeakHashMap;
-import javax.sound.sampled.Port;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import javax.imageio.*;
+import java.io.*;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+import javax.swing.JPanel;
+import javax.imageio.ImageIO;
+import java.util.ArrayList;
+
+
+
+// video to load jar
+//https://www.youtube.com/watch?v=QAJ09o3Xl_0
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 
 
 //*******************************************************************************
@@ -82,6 +102,7 @@ public class GameLand implements Runnable, KeyListener {
     public Image BananaPic;
     public Image EndPic;
 
+
     public boolean PizzaIsIntersectingBananas;
     public boolean BallIsIntersectingBananas;
 
@@ -91,11 +112,13 @@ public class GameLand implements Runnable, KeyListener {
     // This is the code that runs first and automatically
     public static void main(String[] args) {
         GameLand ex = new GameLand();   //creates a new instance of the game and tells GameLand() method to run
-        new Thread(ex).start();       //creates a thread & starts up the code in the run( ) method
+        new Thread(ex).start();
+        //creates a thread & starts up the code in the run( ) method
     }
 
-    public Image backPic;
+    public BufferedImage backPic;
     public Image StartPic;
+    ArrayList<String> Photo;
     public boolean diverIsIntersectingDj;
     public boolean lightningIsIntersectingDiver;
     public boolean djIsIntersectingLightning;
@@ -107,27 +130,45 @@ public class GameLand implements Runnable, KeyListener {
     // Initialize your variables and construct your program objects here.
     public GameLand() {
         setUpGraphics(); //this calls the setUpGraphics() method
+        Photo = new ArrayList<String>();
 
         //create (construct) the objects needed for the game below
         //        //for each object that has a picture, load in images as well
         /** Step 3 Constryct a specific Hero**/
 
-
-
+        try {
+            pull();
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("printing photos");
+        for (String i : Photo) {
+            System.out.println(i);
+        }
+        int size = Photo. size();
+        int pencil= (int) (Math. random() * size);
+        System.out.println(pencil);
         /** Step 4 load in the image for your object**/
         BallPic = Toolkit.getDefaultToolkit().getImage("BBALL.png");
         PizzaPic = Toolkit.getDefaultToolkit().getImage("Pizza.png");
         BWTBPic = Toolkit.getDefaultToolkit().getImage("BWTB.png");
         GhostPic = Toolkit.getDefaultToolkit().getImage("Ghost.png");
         CloudPic = Toolkit.getDefaultToolkit().getImage("cloud.png");
-        backPic = Toolkit.getDefaultToolkit().getImage("images");
-        BananaPic =  Toolkit.getDefaultToolkit().getImage("banana.png");
-        StartPic =  Toolkit.getDefaultToolkit().getImage("Start.png");
+        try {
+            backPic = ImageIO.read(new URL(Photo.get(pencil)));
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        BananaPic = Toolkit.getDefaultToolkit().getImage("banana.png");
+        StartPic = Toolkit.getDefaultToolkit().getImage("Start.png");
         EndPic = Toolkit.getDefaultToolkit().getImage("END.png");
 
 
     }// GameLand()
-    public void startLevel(){
+
+    public void startLevel() {
         Ball = new Hero(800, 12, 6, 4);
         Pizza = new Hero(55, 621, 6, 4);
         BWTB = new Hero(623, 232, 6, 4);
@@ -165,54 +206,137 @@ public class GameLand implements Runnable, KeyListener {
         }
     }
 
+
+    public  void pull() throws ParseException {
+        String output = "abc";
+        String totlaJson="";
+        try {
+
+            URL url = new URL("https://app.ticketmaster.com/discovery/v2/attractions?apikey=nNRV8kCwsCwhOhUO8PbwFiDHb78KAJ5A&locale=*");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+
+            if (conn.getResponseCode() != 200) {
+
+                throw new RuntimeException("Failed : HTTP error code : "
+                        + conn.getResponseCode());
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(
+                    (conn.getInputStream())));
+
+
+            System.out.println("Output from Server .... \n");
+            while ((output = br.readLine()) != null) {
+                System.out.println(output);
+                totlaJson+=output;
+            }
+
+            conn.disconnect();
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        JSONParser parser = new JSONParser();
+        //System.out.println(str);
+        org.json.simple.JSONObject jsonObject = (org.json.simple.JSONObject) parser.parse(totlaJson);
+        System.out.println(jsonObject);
+
+        try {
+
+            JSONObject embedded = (JSONObject) jsonObject.get("_embedded");
+            System.out.println(embedded);
+
+            org.json.simple.JSONArray msg = (org.json.simple.JSONArray) embedded.get("attractions");
+            //JSONObject Url = (JSONObject) jsonObject.get("url");
+            // System.out.println(Url);
+
+            int n = msg.size(); //(msg).length();
+            for (int i = 0; i < n; ++i) {
+                JSONObject test =(JSONObject) msg.get(i);
+                String Name=(String) test.get("name");
+                System.out.println(Name);
+                // System.out.println(test);
+                org.json.simple.JSONArray images = (org.json.simple.JSONArray) test.get("images");
+                //System.out.println(images);
+                for(int l=0; l<1; l++){
+                    JSONObject Image = (JSONObject) images.get(l);
+                    //  System.out.println(Image);
+                    String Url = (String) Image.get("url");
+                    System.out.println(Url);
+                    Photo.add(Url);
+
+                }
+
+                // System.out.println(person.getInt("key"));
+            }
+            // String height= (String)jsonObject.get("height");
+            // System.out.println(embedded);
+
+        }
+
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+
+
+    }
+
+
     //paints things on the screen using bufferStrategy
     private void render() {
         Graphics2D g = (Graphics2D) bufferStrategy.getDrawGraphics();
         g.clearRect(0, 0, WIDTH, HEIGHT);
-       if(startScreen==true) {
-           g.drawImage(StartPic, 0, 0, WIDTH, HEIGHT, null);
-           g.drawString("press space bar to start" + "      ITS GO TIME", 400, 300);
-           startTime=System.currentTimeMillis();
-       }
-
+        if (startScreen == true) {
+            g.drawImage(StartPic, 0, 0, WIDTH, HEIGHT, null);
+            g.drawString("press space bar to start" + "      ITS GO TIME", 400, 300);
+            startTime = System.currentTimeMillis();
+        }
 
         if (isPlaying == true) {
 
-               //draw the image of your objects below:
-               /**Step 5 draw the image of your object to the screen**/
-               g.drawImage(backPic, 0, 0, WIDTH, HEIGHT, null);
-               if (Ball != null) {
-                   g.drawImage(BallPic, (int) Ball.xpos, (int) Ball.ypos, (int) Ball.width, (int) Ball.height, null);
-               }
-               if (Pizza != null) {
-                   g.drawImage(PizzaPic, (int) Pizza.xpos, (int) Pizza.ypos, (int) Pizza.width, (int) Pizza.height, null);
-               }
-               g.drawImage(BWTBPic, (int) BWTB.xpos, (int) BWTB.ypos, (int) BWTB.width, (int) BWTB.height, null);
-               g.drawImage(GhostPic, (int) Ghost.xpos, (int) Ghost.ypos, (int) Ghost.width, (int) Ghost.height, null);
-               g.drawImage(CloudPic, (int) Cloud.xpos, (int) Cloud.ypos, (int) Cloud.width, (int) Cloud.height, null);
 
-               if (bananas!= null) {
-               for (int i = 0; i < bananas.length; i = i + 1) {
-                   g.drawImage(BananaPic, bananas[i].xpos, bananas[i].ypos, bananas[i].width, bananas[i].height, null);
-                   //g.draw image once you find a bannan pic
-               }
-               }
+            //draw the image of your objects below:
+            /**Step 5 draw the image of your object to the screen**/
+            g.drawImage(backPic, 0, 0, WIDTH, HEIGHT, null);
+            if (Ball != null) {
+                g.drawImage(BallPic, (int) Ball.xpos, (int) Ball.ypos, (int) Ball.width, (int) Ball.height, null);
+            }
+            if (Pizza != null) {
+                g.drawImage(PizzaPic, (int) Pizza.xpos, (int) Pizza.ypos, (int) Pizza.width, (int) Pizza.height, null);
+            }
+            g.drawImage(BWTBPic, (int) BWTB.xpos, (int) BWTB.ypos, (int) BWTB.width, (int) BWTB.height, null);
+            g.drawImage(GhostPic, (int) Ghost.xpos, (int) Ghost.ypos, (int) Ghost.width, (int) Ghost.height, null);
+            g.drawImage(CloudPic, (int) Cloud.xpos, (int) Cloud.ypos, (int) Cloud.width, (int) Cloud.height, null);
 
-
-
-
-           }
-       if (gameOver==true){
-           g.drawImage(EndPic, 0, 0, WIDTH, HEIGHT, null);
-           if( count <1) {
-               currentTime=System.currentTimeMillis();
-               elapsedTime=(int)((currentTime-startTime)*.001); // *.001 to convert to seconds
-               System.out.println(elapsedTime);
-               count++;
-           }
+            if (bananas != null) {
+                for (int i = 0; i < bananas.length; i = i + 1) {
+                    g.drawImage(BananaPic, bananas[i].xpos, bananas[i].ypos, bananas[i].width, bananas[i].height, null);
+                    //g.draw image once you find a bannan pic
+                }
+            }
 
 
-       }
+        }
+
+        if (gameOver == true) {
+            g.drawImage(EndPic, 0, 0, WIDTH, HEIGHT, null);
+            if (count < 1) {
+                currentTime = System.currentTimeMillis();
+                elapsedTime = (int) ((currentTime - startTime) * .001); // *.001 to convert to seconds
+                System.out.println(elapsedTime);
+                count++;
+            }
+
+
+        }
         //dispose the images each time(this allows for the illusion of movement).
         g.dispose();
         bufferStrategy.show();
@@ -239,7 +363,6 @@ public class GameLand implements Runnable, KeyListener {
                 bananas[i].bouncingMove();
             }
         }
-
 
 
     }
@@ -289,122 +412,128 @@ public class GameLand implements Runnable, KeyListener {
     }
 
 
-        //Pauses or sleeps the computer for the amount specified in milliseconds
-        public void pause ( int time){
-            //sleep
-            try {
-                Thread.sleep(time);
-            } catch (InterruptedException e) {
+    //Pauses or sleeps the computer for the amount specified in milliseconds
+    public void pause(int time) {
+        //sleep
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
 
-            }
         }
+    }
 
 
-        //Graphics setup method
-        private void setUpGraphics () {
-            frame = new JFrame("Game Land");   //Create the program window or frame.  Names it.
+    //Graphics setup method
+    private void setUpGraphics() {
+        frame = new JFrame("Game Land");   //Create the program window or frame.  Names it.
 
-            panel = (JPanel) frame.getContentPane();  //sets up a JPanel which is what goes in the frame
-            panel.setPreferredSize(new Dimension(WIDTH, HEIGHT));  //sizes the JPanel
-            panel.setLayout(null);   //set the layout
+        panel = (JPanel) frame.getContentPane();  //sets up a JPanel which is what goes in the frame
+        panel.setPreferredSize(new Dimension(WIDTH, HEIGHT));  //sizes the JPanel
+        panel.setLayout(null);   //set the layout
 
-            // creates a canvas which is a blank rectangular area of the screen onto which the application can draw
-            // and trap input events (Mouse and Keyboard events)
-            canvas = new Canvas();
-            canvas.setBounds(0, 0, WIDTH, HEIGHT);
-            canvas.setIgnoreRepaint(true);
-            canvas.addKeyListener(this);
+        // creates a canvas which is a blank rectangular area of the screen onto which the application can draw
+        // and trap input events (Mouse and Keyboard events)
+        canvas = new Canvas();
+        canvas.setBounds(0, 0, WIDTH, HEIGHT);
+        canvas.setIgnoreRepaint(true);
+        canvas.addKeyListener(this);
 
-            panel.add(canvas);  // adds the canvas to the panel.
+        panel.add(canvas);  // adds the canvas to the panel.
 
-            // frame operations
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);  //makes the frame close and exit nicely
-            frame.pack();  //adjusts the frame and its contents so the sizes are at their default or larger
-            frame.setResizable(false);   //makes it so the frame cannot be resized
-            frame.setVisible(true);      //IMPORTANT!!!  if the frame is not set to visible it will not appear on the screen!
+        // frame operations
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);  //makes the frame close and exit nicely
+        frame.pack();  //adjusts the frame and its contents so the sizes are at their default or larger
+        frame.setResizable(false);   //makes it so the frame cannot be resized
+        frame.setVisible(true);      //IMPORTANT!!!  if the frame is not set to visible it will not appear on the screen!
 
-            // sets up things so the screen displays images nicely.
-            canvas.createBufferStrategy(2);
-            bufferStrategy = canvas.getBufferStrategy();
-            canvas.requestFocus();
-            System.out.println("DONE graphic setup");
+        // sets up things so the screen displays images nicely.
+        canvas.createBufferStrategy(2);
+        bufferStrategy = canvas.getBufferStrategy();
+        canvas.requestFocus();
+        System.out.println("DONE graphic setup");
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        //probably will stay empty
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        char key = e.getKeyChar();
+        int keyCode = e.getKeyCode();
+        //System.out.println("Key:" + key + ", KeyCode: " + keyCode);
+        if (keyCode == 68) {//d=68
+            Ball.rightPressed = true;
         }
-
-        @Override
-        public void keyTyped (KeyEvent e){
-            //probably will stay empty
+        if (keyCode == 65) {//a=65
+            Ball.leftPressed = true;
         }
-
-        @Override
-        public void keyPressed (KeyEvent e){
-            char key = e.getKeyChar();
-            int keyCode = e.getKeyCode();
-            //System.out.println("Key:" + key + ", KeyCode: " + keyCode);
-            if (keyCode == 68) {//d=68
-                Ball.rightPressed = true;
-            }
-            if (keyCode == 65) {//a=65
-                Ball.leftPressed = true;
-            }
-            if (keyCode == 87) {//w=68
-                Ball.upPressed = true;
-            }
-            if (keyCode == 83) {//s=65
-                Ball.downPressed = true;
-            }
-            if (keyCode == 39) {//R arrow=39
-                Pizza.rightPressed = true;
-            }
-            if (keyCode == 37) {//L arrow=65
-                Pizza.leftPressed = true;
-            }
-            if (keyCode == 38) {//R arrow=39
-                Pizza.upPressed = true;
-            }
-            if (keyCode == 40) {//L arrow=65
-                Pizza.downPressed = true;
-            }
+        if (keyCode == 87) {//w=68
+            Ball.upPressed = true;
         }
+        if (keyCode == 83) {//s=65
+            Ball.downPressed = true;
+        }
+        if (keyCode == 39) {//R arrow=39
+            Pizza.rightPressed = true;
+        }
+        if (keyCode == 37) {//L arrow=65
+            Pizza.leftPressed = true;
+        }
+        if (keyCode == 38) {//R arrow=39
+            Pizza.upPressed = true;
+        }
+        if (keyCode == 40) {//L arrow=65
+            Pizza.downPressed = true;
+        }
+    }
 
-        @Override
-        public void keyReleased (KeyEvent e){
-            char key = e.getKeyChar();
-            int keyCode = e.getKeyCode();
+    @Override
+    public void keyReleased(KeyEvent e) {
+        char key = e.getKeyChar();
+        int keyCode = e.getKeyCode();
 
-            if (keyCode == 32) {
+        if (keyCode == 32) {
+            startScreen = false;
+            isPlaying = true;
+            startLevel();
+        }
+        if (keyCode == 68) {//d=68
+            Ball.rightPressed = false;
+        }
+        if (keyCode == 65) {//a=65
+            Ball.leftPressed = false;
+        }
+        if (keyCode == 87) {//w=87
+            Ball.upPressed = false;
+        }
+        if (keyCode == 83) {//s=83
+            Ball.downPressed = false;
+        }
+        if (keyCode == 39) {//right arrow = 39
+            Pizza.rightPressed = false;
+        }
+        if (keyCode == 37) {//left arrow = 37
+            Pizza.leftPressed = false;
+        }
+        if (keyCode == 38) {//up arrow=38
+            Pizza.upPressed = false;
+        }
+        if (keyCode == 40) {//down arrow =40
+            Pizza.downPressed = false;
+        }
+        if (keyCode == 32) {
+            if (startScreen == true) {
                 startScreen = false;
                 isPlaying = true;
-                startLevel();
-            }
-            if (keyCode == 68) {//d=68
-                Ball.rightPressed = false;
-            }
-            if (keyCode == 65) {//a=65
-                Ball.leftPressed = false;
-            }
-            if (keyCode == 87) {//w=87
-                Ball.upPressed = false;
-            }
-            if (keyCode == 83) {//s=83
-                Ball.downPressed = false;
-            }
-            if (keyCode == 39) {//right arrow = 39
-                Pizza.rightPressed = false;
-            }
-            if (keyCode == 37) {//left arrow = 37
-                Pizza.leftPressed = false;
-            }
-            if (keyCode == 38) {//up arrow=38
-                Pizza.upPressed = false;
-            }
-            if (keyCode == 40) {//down arrow =40
-                Pizza.downPressed = false;
-            }
-            if(keyCode==32){
-                if(startScreen==true){
-                    startScreen=false;
-                    isPlaying=true;
-                }
             }
         }
     }
+
+}
+
+
+
+
+
